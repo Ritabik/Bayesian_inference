@@ -1,0 +1,64 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import minimize
+
+# Given data
+x = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+m_values = [5, 3, 1, 0.5]
+c_true = 1
+avg_n = 0
+n_std = 2
+
+# Generate noisy data for each dataset with different noises
+np.random.seed(42)
+datasets = []
+
+for m in m_values:
+    n = np.random.normal(avg_n, n_std, len(x))
+    y_true = m * x + c_true + n
+    datasets.append(y_true)
+
+# Define the chi-square function to minimize for each dataset, keeping the intercept constant
+def chi_square_slope(slope, x, y_true, c_true, n_std):
+    y_model = slope * x + c_true
+    chi_sq = np.sum(((y_true - y_model) / n_std) ** 2)
+    return chi_sq
+
+# Initialize lists to store results
+m_fitted_list = []
+
+# Loop through each dataset and find best-fitted slope (with constant intercept)
+for i, y_true in enumerate(datasets):
+    # Initial guess for slope
+    initial_guess = m_values[i]
+
+    # Minimize chi-square to find best-fitted slope
+    result = minimize(chi_square_slope, initial_guess, args=(x, y_true, c_true, n_std))
+
+    # Extract best-fitted slope
+    m_fitted = result.x[0]
+
+    # Append result to the list
+    m_fitted_list.append(m_fitted)
+
+    # Plot the original data and the best-fitted line for each dataset
+    plt.scatter(x, y_true, label=f'Dataset {i + 1}')
+    plt.plot(x, m_fitted * x + c_true, label=f'Best Fitted Line {i + 1}, Slope: {m_fitted:.2f}')
+
+# Annotate the plot with fitted slope values
+for i, m_fitted in enumerate(m_fitted_list):
+    plt.text(10.5, m_fitted * 10 + c_true, f'Slope: {m_fitted:.2f}', color='black')
+
+# Display the plot
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Linear Fit with Chi-Square Minimization (Constant Intercept) for Multiple Datasets')
+plt.legend()
+plt.show()
+
+# Display the results for each dataset
+for i, m_fitted in enumerate(m_fitted_list):
+    print(f"\nDataset {i + 1}:")
+    print("True Slope:", m_values[i])
+    print("Constant Intercept (c_true):", c_true)
+    print("Fitted Slope:", m_fitted)

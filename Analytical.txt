@@ -1,0 +1,65 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Given data
+x = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+m_values = [5, 3, 1, 0.5]
+c_true = 1
+avg_n = 0
+n_std_values = [2, 1.5, 1, 0.5]
+
+# Generate noisy data for each dataset with different noises
+np.random.seed(42)
+datasets = []
+
+# Calculate the intercept for the first dataset
+n_first_dataset = np.random.normal(avg_n, n_std_values[0], len(x))
+y_first_dataset = m_values[0] * x + c_true + n_first_dataset
+c_first_dataset = np.mean(y_first_dataset - m_values[0] * x)
+
+for i, m in enumerate(m_values):
+    n = np.random.normal(avg_n, n_std_values[i], len(x))
+    y_true = m * x + c_first_dataset + n
+    datasets.append(y_true)
+
+# Analytical calculation for linear regression with fixed intercept
+def analytical_linear_regression(x, y):
+    N = len(x)
+    xy_sum = np.sum(x * y)
+    x_sum = np.sum(x)
+    y_sum = np.sum(y)
+    x_squared_sum = np.sum(x ** 2)
+
+    # Fix the intercept to be always 1
+    m = (N * xy_sum - x_sum * y_sum) / (N * x_squared_sum - x_sum ** 2)
+    c = 1  # Fixed intercept value
+
+    return m, c
+
+# Initialize lists to store results
+m_analytical_list = []
+
+# Loop through each dataset and calculate analytical best-fitted slope
+for i, y_values in enumerate(datasets):
+    m_analytical, _ = analytical_linear_regression(x, y_values)
+    
+    # Append results to list
+    m_analytical_list.append(m_analytical)
+
+    # Plot the original data and the best-fitted line for each dataset with fixed intercept
+    plt.scatter(x, y_values, label=f'Dataset {i + 1}')
+    plt.plot(x, m_analytical * x + c_true, label=f'Analytical Best Fitted Line {i + 1}, Slope: {m_analytical:.2f}')
+
+# Display the plot
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Analytical Linear Regression with Fixed Intercept for Multiple Datasets')
+plt.legend()
+plt.show()
+
+# Display the analytical results for each dataset
+for i, m_analytical in enumerate(m_analytical_list):
+    print(f"\nDataset {i + 1} (Analytical Solution):")
+    print("True Slope:", m_values[i])
+    print("Fixed Intercept (c_true):", c_true)
+    print("Analytical Fitted Slope:", m_analytical)
